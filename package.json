@@ -5,6 +5,7 @@
         "start": "node app.js"
     },
     "dependencies": {
+        "basic-auth-connect": "1.0.x",
         "body-parser": "~1.18.x",
         "cfenv": "~1.0.0",
         "ejs": "^2.3.4",

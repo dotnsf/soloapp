@@ -1,7 +1,9 @@
 // app.js
 
+var basicAuth = require( 'basic-auth-connect' );
 var cfenv = require( 'cfenv' );
 var express = require( 'express' );
+var fs = require( 'fs' );
 var bodyParser = require( 'body-parser' );
 var multer = require( 'multer' );
 var crypto = require( 'crypto' );
@@ -11,7 +13,7 @@ var app = express();
 var settings = require( './settings' );
 var appEnv = cfenv.getAppEnv();
 
-app.use( multer( { dest: './tmp/' } ) );
+app.use( multer( { dest: './tmp/' } ).single( 'file' ) );
 app.use( express.static( __dirname + '/public' ) );
 //app.use( bodyParser.urlencoded( { extended: true, limit: '10mb' } ) );
 app.use( bodyParser.urlencoded() );
@@ -52,6 +54,7 @@ app.post( '/add', function( req, res ){
       json: params
     };
     request( options1, ( err1, res1, body1 ) => {
+      fs.unlink( filepath, function( err ){} );
       if( err1 ){
         console.log( err1 );
         res.status( 400 );
@@ -64,6 +67,7 @@ app.post( '/add', function( req, res ){
       }
     });
   }else{
+    if( filepath ){ fs.unlink( filepath, function( err ){} ); }
     res.status( 400 );
     res.write( JSON.stringify( { status: false, message: 'No name or No file' }, 2, null ) );
     res.end();
@@ -102,13 +106,13 @@ app.get( '/doc/:id', function( req, res ){
 });
 
 app.get( '/doc/:id/attachment', function( req, res ){
-  res.contentType( 'application/json; charset=utf-8' );
+  //res.contentType( 'application/json; charset=utf-8' );
   var id = req.params.id;
   console.log( 'GET /doc/' + id + '/attachment' );
   if( id ){
-    //. https://(cloudant.cloudant.com)/(dbname)/(docid)/(attachmentname)
-
+    res.redirect( settings.solo_api_url + '/doc/' + id + '/attachment' );
   }else{
+    res.contentType( 'application/json; charset=utf-8' );
     res.status( 400 );
     res.write( JSON.stringify( { status: false, message: 'Parameter id needed in request path: /doc/:id' }, 2, null ) );
     res.end();
@@ -128,13 +132,13 @@ app.get( '/docs', function( req, res ){
   };
   request( options1, ( err1, res1, body1 ) => {
     if( err1 ){
-      console.log( err1 );
+      //console.log( err1 );
       res.status( 400 );
-      res.write( JSON.stringify( { status: false, message: err1 }, 2, null ) );
+      res.write( JSON.stringify( err1, 2, null ) );
       res.end();
     }else{
-      console.log( body1 );
-      res.write( JSON.stringify( { status: true, message: body1 }, 2, null ) );
+      //console.log( body1 );
+      res.write( JSON.stringify( body1, 2, null ) );
       res.end();
     }
   });

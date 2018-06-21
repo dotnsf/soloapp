@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+
+<title>Solo App</title>
+<script src="//code.jquery.com/jquery-2.0.3.min.js"></script>
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="./jquery.subwayMap-0.5.0.js"></script>
+<script src="./cvi_busy_lib.js"></script>
+
+<script>
+$(function(){
+  getDocs();
+
+  $('#form1').submit( function( event ){
+    event.preventDefault();
+
+    var form = $('#form1').get()[0];
+    var fd = new FormData( form );
+    $.ajax({
+      type: 'POST',
+      url: './add',
+      data: fd,
+      processData: false,
+      contentType: false,
+      dataType: 'json',
+      success: function( data ){
+        data = JSON.parse( data );
+        console.log( data );
+        getDocs();
+      },
+      error: function(){
+        console.log( 'error' );
+      }
+    });
+
+    return false;
+  });
+});
+
+function getDocs(){
+  var obj = getBusyOverlay( 'viewport', {color:'black', opacity:0.5, text:'loading..', style:'text-decoration:blink; font-weight:bold; font-size:12px; color:white;' } );
+  $.ajax({
+    type: 'GET',
+    url: '/docs',
+    success: function( result ){
+      obj.remove();
+      result = JSON.parse( result );
+      console.log( result );
+      if( result.status ){
+        var cnt = result.docs.length;
+        if( cnt > 0 ){
+          result.docs.forEach( function( doc ){
+            var tr = '<tr><td><a target="_blank" href="/doc/' + doc._id + '/attachment">' + doc._id + '</a></td><td>' + doc.name + '</td></tr>';
+            $('#tbody').append( tr );
+          });
+        }
+      }else{
+        console.log( result.validateMessage );
+      }
+    },
+    error: function( err ){
+      obj.remove();
+      console.log( err );
+    }
+  });
+}
+
+function sanitize( str ){
+  return str.replace(/"/g, '&#34;').replace(/'/g, '&#39;');
+}
+</script>
+<style>
+body{
+  width:100%;
+  height:100%;
+}
+div{
+  height:100%;
+}
+</style>
+</head>
+<body>
+
+<div class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a href="/" class="navbar-brand">Solo App</a>
+      <!--
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="collapse navbar-collapse target">
+      <ul class="nav navbar-nav navbar-right" id="navbar">
+      </ul>
+    -->
+    </div>
+  </div>
+</div>
+
+  <div class="container">
+    <table class="table">
+      <thead>
+        <tr><th>#</th><th>Name</th></tr>
+      </thead>
+      <tbody id="tbody">
+      </tbody>
+    </table>
+  </div>
+
+  <!-- //add -->
+  <div class="container" style="padding:20px 0;" align="right">
+    <form id="form1" method="POST" action="add" enctype="multipart/form-data">
+      <table>
+        <tr>
+          <td>Name: <input type="text" name="name" value=""/></td>
+          <td><input type="file" name="file" value=""/></td>
+          <td><input type="submit" class="btn btn-primary" value="Add File"/></td>
+        </tr>
+      </table>
+    </form>
+  </div>
+  <!-- add// -->
+
+</body>
+</html>
